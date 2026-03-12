@@ -13,18 +13,17 @@ try:
     dynamodb = boto3.resource('dynamodb', region_name=REGION)
     tracker_table = dynamodb.Table(TRACKER_TABLE_NAME)
 except Exception as e:
-    print(f"Erro ao inicializar boto3 para DynamoDB: {e}")
+    print(f"Error initializing boto3 for DynamoDB: {e}")
 
 
-def buscar_viagens_pendentes():
-    """Consulta o DynamoDB (via GSI) para encontrar viagens com status PENDING."""
+def search_pending_trips():
     try:
         response = tracker_table.query(
             IndexName=GSI_NAME,
             KeyConditionExpression=Key('status').eq('PENDING')
         )
-        viagens = response.get('Items', [])
-        return viagens
+        trips = response.get('Items', [])
+        return trips
     except Exception as e:
-        print(f"❌ Erro ao buscar no DynamoDB: {e}")
+        print(f"❌ Error searching DynamoDB: {e}")
         return []

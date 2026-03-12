@@ -1,5 +1,5 @@
 import os
-import json
+
 import time
 from dotenv import load_dotenv
 import boto3
@@ -86,24 +86,7 @@ def update_trip_state(batch_id, position_start=None, position_current=None, is_f
     except Exception as e:
         print(f"Erro ao atualizar DynamoDB: {e}")
 
-# ==========================================
-# 4. GRAVAÇÃO DE COORDENADAS NO RDS POSTGRESQL
-# ==========================================
-def save_trip_segment_to_rds(batch_id, ts_inicial, ts_final, geo_points, parquet_ref):
-    try:
-        conn = psycopg2.connect(host=DB_HOST, user=DB_USER, password=DB_PASS, dbname=DB_NAME)
-        cursor = conn.cursor()
-        query = """
-            INSERT INTO trip_geolocations (batch_id, start_timestamp, end_timestamp, geo_points, parquet_ref)
-            VALUES (%s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (batch_id, ts_inicial, ts_final, json.dumps(geo_points), parquet_ref))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        print(f"Lote salvo no RDS com ref: {parquet_ref}")
-    except Exception as e:
-        print(f"Erro no RDS: {e}")
+
 
 # ==========================================
 # 5. O CORAÇÃO DA LAMBDA: MÁQUINA DE FATIAR (LOOP)
