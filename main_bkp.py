@@ -3,7 +3,6 @@ import os
 import time
 from dotenv import load_dotenv
 import boto3
-import psycopg2
 import pandas as pd
 import awswrangler as wr
 from decimal import Decimal
@@ -18,7 +17,7 @@ from utils import *
 
 load_dotenv()
 
-BUCKET_NAME = os.environ.get('BUCKET_NAME')
+
 TRACKER_TABLE_NAME = os.environ.get('TRACKER_TABLE_NAME')
 GSI_NAME = os.environ.get('GSI_NAME')
 DB_HOST = os.environ.get('DB_HOST', 'trips-sumary-db.cvwwgqyg0i2a.sa-east-1.rds.amazonaws.com')
