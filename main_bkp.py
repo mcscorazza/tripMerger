@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import boto3
 import pandas as pd
 import awswrangler as wr
-from decimal import Decimal
+
 from boto3.dynamodb.conditions import Key
 from utils import *
 
@@ -36,54 +36,7 @@ tracker_table = dynamodb.Table(TRACKER_TABLE_NAME)
 # ==========================================
 # 3. ATUALIZAÇÃO NO DYNAMODB (trip_state_tracker)
 # ==========================================
-def update_trip_state(batch_id, position_start=None, position_current=None, is_finished=False):
-    update_expr_parts = []
-    expr_vals = {}
-    expr_names = {}
-    
-    def to_decimal_list(pos):
-        return [Decimal(str(pos[0])), Decimal(str(pos[1]))] if pos else None
 
-    if position_start:
-        city_start = get_city_name(position_start[0], position_start[1])
-        update_expr_parts.extend(["position_start = :pstart", "city_start = :cstart"])
-        expr_vals[':pstart'] = to_decimal_list(position_start)
-        expr_vals[':cstart'] = city_start
-
-    if position_current:
-        city_current = get_city_name(position_current[0], position_current[1])
-        update_expr_parts.extend(["position_current = :pcurr", "city_current = :ccurr"])
-        expr_vals[':pcurr'] = to_decimal_list(position_current)
-        expr_vals[':ccurr'] = city_current
-
-    if is_finished:
-        if position_current:
-            update_expr_parts.extend(["position_end = :pcurr", "city_end = :ccurr"])
-        
-        update_expr_parts.extend(["#s = :status", "expires_at = :ttl"])
-        expr_vals[':status'] = 'CONSOLIDATED'
-        expr_vals[':ttl'] = int(time.time()) + (60 * 60 * 24 * 7) # TTL 7 dias
-        expr_names['#s'] = 'status'
-    else:
-        update_expr_parts.append("#s = :status")
-        expr_vals[':status'] = 'PENDING'
-        expr_names['#s'] = 'status'
-        
-    if not update_expr_parts: return
-
-    update_expr = "SET " + ", ".join(update_expr_parts)
-    kwargs = {
-        'Key': {'batch_id': batch_id},
-        'UpdateExpression': update_expr,
-        'ExpressionAttributeValues': expr_vals
-    }
-    if expr_names: kwargs['ExpressionAttributeNames'] = expr_names
-
-    try:
-        tracker_table.update_item(**kwargs)
-        print(f"DynamoDB atualizado para {batch_id}")
-    except Exception as e:
-        print(f"Erro ao atualizar DynamoDB: {e}")
 
 
 

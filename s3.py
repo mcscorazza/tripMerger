@@ -38,9 +38,12 @@ def print_s3_list(pending_trips):
     print("  +-------------------------------------------+-------------------+")
 
 
-def last_trip_status(jsons_files):
-  ordered_jsons = sorted(jsons_files)
-  last_json = ordered_jsons[-1]
-  df = wr.s3.read_json(path=last_json, orient='records', lines=True)
-  is_finished = ('FINISH' in df['trip_status'].values) if 'trip_status' in df.columns else False
-  return is_finished
+def has_finish(json_file):
+  df = wr.s3.read_json(path=json_file, orient='records', lines=True)
+  finish = ('FINISH' in df['trip_status'].values) if 'trip_status' in df.columns else False
+  return finish
+
+def has_start(json_file):
+  df = wr.s3.read_json(path=json_file, orient='records', lines=True)
+  first = (df['trip_status'].item() == "START") if 'batch_seq' in df.columns else False
+  return first
