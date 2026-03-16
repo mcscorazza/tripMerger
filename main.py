@@ -18,7 +18,6 @@ def init_merger():
   for trip in pending_trips:
     print(f"\nGet infos for trip: {trip['batch_id']}")
     jsons_files = get_s3_objects(trip['batch_id'])
-    print(f" > Found: {len(jsons_files)} json files")
     ordered_jsons = sorted(jsons_files)
     process_type = chunk_type(ordered_jsons, CHUNK_SIZE)
 

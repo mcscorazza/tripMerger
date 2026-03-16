@@ -58,7 +58,6 @@ def chunk_type(json_files, chunk_size):
 
   print("    Has START: ", is_start)
   print("    Has FINISH: ", is_finish)
-  print("    JSON Qty: ", len(json_files))
  
   if (len(json_files) < chunk_size) and (not is_start) and (not is_finish):
     return 0
@@ -88,8 +87,8 @@ def process_json_files(id, json_files):
   ts_start = int(df['ts'].min()) if not df['ts'].isnull().all() else int(time.time() - 600)
   ts_finish = int(df['ts'].max()) if not df['ts'].isnull().all() else int(time.time())
 
-  print("     ⏱ TS Start: ", ts_start)
-  print("     ⏱ TS Finish: ", ts_finish)
+  print("     ⏱  TS Start: ", ts_start)
+  print("     ⏱  TS Finish: ", ts_finish)
 
   short_start = to_base62(ts_start)
   short_end = to_base62(ts_finish)
@@ -121,7 +120,7 @@ def large_process_data(id, json_files, chunk_size, is_finish = False):
   loop_num = 1
   while len(json_files) > 0:
     print("\n    ---- Loop #", loop_num)
-    print("\n     - ⚙ Total JSON files: ", len(json_files))
+    print("     - ⚙ Total JSON files: ", len(json_files))
     
     if len(json_files) >= chunk_size:
       files_to_process = json_files[:chunk_size]
@@ -139,7 +138,7 @@ def large_process_data(id, json_files, chunk_size, is_finish = False):
       json_files = json_files[len(files_to_process):]
 
     if len(json_files) < chunk_size and (not is_finish):
-      print("\n    ---- END!")
+      print("    ---- END!")
       print("     ⏹ No FINISH found! Exit #JSON files: ", len(json_files))
       break
 

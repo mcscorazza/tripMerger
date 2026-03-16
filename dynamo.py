@@ -47,13 +47,13 @@ def update_trip_state(batch_id, start_pos=None, current_pos=None, is_finished=Fa
     expr_names = {}
     
     if start_pos:
-        city_start = get_city_name(start_pos[0], start_pos[1])
+        city_start = get_city_name(start_pos[0], start_pos[1], "START")
         update_expr_parts.extend(["start_pos = :pstart", "city_start = :cstart"])
         expr_vals[':pstart'] = to_decimal_list(start_pos)
         expr_vals[':cstart'] = city_start
 
     if current_pos:
-        city_current = get_city_name(current_pos[0], current_pos[1])
+        city_current = get_city_name(current_pos[0], current_pos[1], "CURRENT")
         update_expr_parts.extend(["current_pos = :pcurr", "city_current = :ccurr"])
         expr_vals[':pcurr'] = to_decimal_list(current_pos)
         expr_vals[':ccurr'] = city_current
