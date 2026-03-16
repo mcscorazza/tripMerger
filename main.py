@@ -20,21 +20,14 @@ def init_merger():
     jsons_files = get_s3_objects(trip['batch_id'])
     print(f" > Found: {len(jsons_files)} json files")
     ordered_jsons = sorted(jsons_files)
-    is_start = has_start(ordered_jsons[0])
-    is_finish = has_finish(ordered_jsons[-1])    
-    
-    if (len(ordered_jsons) < CHUNK_SIZE) and (not is_start) and (not is_finish):
-      print("Nothing to do!")
-    
-    if (len(ordered_jsons) < CHUNK_SIZE) and (is_start) and (not is_finish):
-      update_start(trip['batch_id'], ordered_jsons[0])
-      
-    if len(ordered_jsons) < CHUNK_SIZE & is_start & is_finish:
-      complete_process_data(ordered_jsons)
-    
-    
+    process_type = chunk_type(ordered_jsons, CHUNK_SIZE)
+
+    if process_type >= 0:
+      process_data(trip['batch_id'], ordered_jsons, process_type, CHUNK_SIZE)
 
 
+  list_rds_trips(limit=5)
+  
   print("\n-- Merger Finished --\n")
 
 if __name__ == "__main__":

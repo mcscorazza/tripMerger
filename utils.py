@@ -28,6 +28,6 @@ def get_city_name(lat, lng):
             cidade = address.get('city') or address.get('town') or address.get('village') or address.get('municipality')
             return cidade if cidade else "Localização Desconhecida"
     except Exception as e:
-        print(f"Erro na geolocalização para {lat},{lng}: {e}")
+        print(f"     ❌ Erro na geolocalização para {lat},{lng}: {e}")
         return "Localização Desconhecida"
     

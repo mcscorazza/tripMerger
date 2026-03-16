@@ -83,6 +83,6 @@ def update_trip_state(batch_id, start_pos=None, current_pos=None, is_finished=Fa
 
     try:
         tracker_table.update_item(**kwargs)
-        print(f"DynamoDB updated to {batch_id}")
+        print(f"\n    - ✔ DynamoDB updated to {batch_id}")
     except Exception as e:
         print(f"Error updating DynamoDB: {e}")

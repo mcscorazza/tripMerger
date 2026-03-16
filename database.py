@@ -18,7 +18,7 @@ def conect_rds():
         print(f"❌ Error on conect to RDS: {e}")
         return None
 
-def search_trips(limit=5):
+def select_rds_trips(limit=5):
     conn = conect_rds()
     if not conn:
         return
@@ -43,6 +43,18 @@ def search_trips(limit=5):
         cursor.close()
         conn.close()
 
+def list_rds_trips(limit):
+    rds_trips = select_rds_trips(limit=limit)
+
+    print("+----------------------------------------+------------+------------+--------------------------+")
+    print("| Batch ID                               | ts Start   | ts End     | Parquet Ref.             |")
+    print("+----------------------------------------+------------+------------+--------------------------+")
+    
+    for rds_trip in rds_trips:
+        print(f"| {rds_trip[0]:38} | {rds_trip[1]:10} | {rds_trip[2]:10} | {rds_trip[3]:24} |")
+
+    print("+----------------------------------------+------------+------------+--------------------------+\n")
+
 # =========================================
 #  Recording coordinates in RDS PostgreSQL
 # =========================================
@@ -62,6 +74,6 @@ def save_chunk_to_rds(batch_id, ts_start, ts_end, geo_points, parquet_ref):
         conn.commit()
         cursor.close()
         conn.close()
-        print(f"Batch saved in RDS with ref: {parquet_ref}")
+        print(f"     📋 Batch saved in RDS with ref: {parquet_ref}")
     except Exception as e:
         print(f"Error on RDS: {e}")
