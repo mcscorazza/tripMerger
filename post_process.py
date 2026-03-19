@@ -1,4 +1,3 @@
-import psycopg2
 from database import *
 from psycopg2.extras import execute_values
 
@@ -23,7 +22,7 @@ def trip_critical_analisis(batch_id):
             return
 
         global_avg = abs(float(result[0]))
-        critical_limit = global_avg * 1.8
+        critical_limit = global_avg * 1.5
         
         print(f"     📊 Global Average: {global_avg:.2f} kgf | 🚨 Critical Trigger: > {critical_limit:.2f} kgf")
 
