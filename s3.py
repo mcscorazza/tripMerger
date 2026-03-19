@@ -1,4 +1,6 @@
 import os
+import math
+import json
 from database import *
 from utils import *
 import awswrangler as wr
@@ -95,6 +97,47 @@ def process_json_files(id, json_files):
   short_end = to_base62(ts_finish)
   parquet_filename = f"{short_start}_{short_end}"
 
+  chart_data = []
+  chunk_sum = 0.0
+  chunk_count = 0
+
+  if 'sensors' in df.columns:
+    for index, row in df.iterrows():
+      sensors = row.get('sensors')
+      row_ts = row.get('ts')
+      
+      if isinstance(sensors, list):
+        for sensor in sensors:
+          if isinstance(sensor, dict) and sensor.get('id') == 'Truque_A':
+            valores_brutos = sensor.get('value')
+            
+            if isinstance(valores_brutos, list):
+              valores_limpos = []
+              for v in valores_brutos:
+                try:
+                  num = float(v)
+                  if not math.isnan(num):
+                    valores_limpos.append(num)
+                except (ValueError, TypeError):
+                  pass
+              
+              if valores_limpos:
+                max_val = max(valores_limpos)
+                min_val = min(valores_limpos)
+                avg_val = sum(valores_limpos) / len(valores_limpos)
+                
+                chart_data.append({
+                  't': int(row_ts) if pd.notnull(row_ts) else 0,
+                  'max': round(max_val, 2),
+                  'min': round(min_val, 2),
+                  'avg': round(avg_val, 2)
+                })
+                
+                chunk_sum += avg_val
+                chunk_count += 1
+          
+            break
+
   if 'position' in df.columns:
       df['lat'] = df['position'].apply(lambda x: float(x[0]) if isinstance(x, list) and len(x) >= 2 else None)
       df['lng'] = df['position'].apply(lambda x: float(x[1]) if isinstance(x, list) and len(x) >= 2 else None)
@@ -106,7 +149,8 @@ def process_json_files(id, json_files):
     geo_df.rename(columns={'ts': 't'}, inplace=True)
     geo_points = geo_df.to_dict(orient='records') 
     if geo_points:
-        save_chunk_to_rds(id, ts_start, ts_finish, geo_points, parquet_filename)
+      save_chunk_to_rds(id, ts_start, ts_finish, geo_points, parquet_filename, 
+              json.dumps(chart_data), chunk_sum, chunk_count)
   
   s3_parquet_key = f"s3://{BUCKET_NAME}/consolidated/batch_id={id}/{parquet_filename}.parquet"
   wr.s3.to_parquet(df=df, path=s3_parquet_key, index=False)

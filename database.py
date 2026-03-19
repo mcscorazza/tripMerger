@@ -58,22 +58,36 @@ def list_rds_trips(limit):
 # =========================================
 #  Recording coordinates in RDS PostgreSQL
 # =========================================
-def save_chunk_to_rds(batch_id, ts_start, ts_end, geo_points, parquet_ref):
-    try:
-        conn = conect_rds()
-        if not conn:
-            return
-        
-        cursor = conn.cursor()
-        
-        query = """
-            INSERT INTO trip_geolocations (batch_id, start_timestamp, end_timestamp, geo_points, parquet_ref)
-            VALUES (%s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (batch_id, ts_start, ts_end, json.dumps(geo_points), parquet_ref))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        print(f"     📋 Batch saved in RDS with ref: {parquet_ref}")
-    except Exception as e:
-        print(f"Error on RDS: {e}")
+def save_chunk_to_rds(batch_id, ts_start, ts_end, geo_points, parquet_ref, chart_data_json, chunk_sum, chunk_count):
+  try:
+    conn = conect_rds()
+    
+    if not conn:
+      return
+    
+    cursor = conn.cursor()
+    
+    query = """
+        INSERT INTO trip_geolocations 
+        (batch_id, start_timestamp, end_timestamp, geo_points, parquet_ref, chart_data, chunk_sum, chunk_count)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    
+    cursor.execute(query, (
+      batch_id, 
+      ts_start, 
+      ts_end, 
+      json.dumps(geo_points), 
+      parquet_ref, 
+      chart_data_json,
+      chunk_sum, 
+      chunk_count
+    ))
+
+    
+    conn.commit()
+    cursor.close()
+    conn.close()
+    print(f"     📋 Batch saved in RDS with ref: {parquet_ref}")
+  except Exception as e:
+    print(f"Error on RDS: {e}")
