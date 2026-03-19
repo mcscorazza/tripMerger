@@ -18,7 +18,7 @@ def to_base62(num):
 # ==========================================
 # 2. GEOLOCALIZAÇÃO REVERSA (Nominatim)
 # ==========================================
-def get_city_name(lat, lng):
+def get_city_name(lat, lng, type):
     url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={lat}&lon={lng}"
     req = urllib.request.Request(url, headers={'User-Agent': 'TripMergerLambda/1.0'})
     try:
@@ -26,6 +26,14 @@ def get_city_name(lat, lng):
             data = json.loads(response.read().decode('utf-8'))
             address = data.get('address', {})
             cidade = address.get('city') or address.get('town') or address.get('village') or address.get('municipality')
+            if cidade:
+                if type == "START":
+                    print("\n     📍 Start city found:   ", cidade)
+                else:
+                    print("\n     📍 Current city found: ", cidade)
+            else:
+                print("\n     ❌ City not found!!!")
+                
             return cidade if cidade else "Localização Desconhecida"
     except Exception as e:
         print(f"     ❌ Erro na geolocalização para {lat},{lng}: {e}")
