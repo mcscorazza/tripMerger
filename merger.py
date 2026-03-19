@@ -1,4 +1,5 @@
 from database import *
+from post_process import trip_critical_analisis
 from s3 import *
 from dynamo import *
 
@@ -34,6 +35,7 @@ def process_data(batch_id, json_files, process_type, chunk_size):
       
       finish_pos = get_pos(json_files[-1])
       process_json_files(batch_id, json_files)
+      trip_critical_analisis(batch_id)
       update_trip_state(batch_id=batch_id, current_pos=finish_pos, is_finished=True)
   
     case 4:
