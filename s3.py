@@ -69,9 +69,9 @@ def chunk_type(json_files, chunk_size):
     return 2
   if (len(json_files) < chunk_size) and (not is_start) and (is_finish):
     return 3
-  if len(json_files) > chunk_size  and (not is_finish):
+  if len(json_files) >= chunk_size  and (not is_finish):
     return 4
-  if len(json_files) > chunk_size  and (is_finish):
+  if len(json_files) >= chunk_size  and (is_finish):
     return 5
   return -1
 

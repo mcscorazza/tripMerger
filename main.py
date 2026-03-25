@@ -8,11 +8,9 @@ CHUNK_SIZE = 600
 def init_merger():
   print("-- Starting the Merger --\n")
 
-  # Search pending trips on DynamoDB table
   pending_trips = search_pending_trips()
 
   if pending_trips:
-    # List the qty of json files (if pending trips found!)
     print_s3_list(pending_trips)
 
   for trip in pending_trips:
