@@ -1,11 +1,11 @@
-from database import *
+from database import get_db_connection, release_db_connection
 from psycopg2.extras import execute_values
 
 def trip_critical_analisis(batch_id):
     print(f"🔍 Starting Post-Trip Criticality Analysis: {batch_id}")
     
     try:
-        conn = conect_rds()
+        conn = get_db_connection()
         if not conn: return
         cursor = conn.cursor()
 
@@ -64,7 +64,7 @@ def trip_critical_analisis(batch_id):
             print("     ✅ Analysis complete! No critical sections found (Smooth trip).")
 
         cursor.close()
-        conn.close()
+        release_db_connection(conn)
 
     except Exception as e:
         print(f"     ❌ Error in the Parsing Engine: {e}")

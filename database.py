@@ -66,7 +66,8 @@ def list_rds_trips(limit):
     print("+----------------------------------------+------------+------------+--------------------------+--------+")
     
     for rds_trip in rds_trips:
-        print(f"| {rds_trip[0]:38} | {rds_trip[1]:10} | {rds_trip[2]:10} | {rds_trip[3]:24} | {rds_trip[4]:6} |")
+        damage_val = f"{rds_trip[4]:.2f}" if rds_trip[4] is not None else "N/A"
+        print(f"| {rds_trip[0]:38} | {rds_trip[1]:10} | {rds_trip[2]:10} | {rds_trip[3]:24} | {damage_val:6} |")
 
     print("+----------------------------------------+------------+------------+--------------------------+--------+\n")
 
