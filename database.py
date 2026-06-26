@@ -43,7 +43,7 @@ def select_rds_trips(limit=5):
     try:
         cursor = conn.cursor()
         query = """
-            SELECT batch_id, start_timestamp, end_timestamp, parquet_ref 
+            SELECT batch_id, start_timestamp, end_timestamp, parquet_ref, damage 
             FROM trip_geolocations 
             ORDER BY start_timestamp DESC 
             LIMIT %s
@@ -61,14 +61,14 @@ def select_rds_trips(limit=5):
 def list_rds_trips(limit):
     rds_trips = select_rds_trips(limit=limit)
 
-    print("+----------------------------------------+------------+------------+--------------------------+")
-    print("| Batch ID                               | ts Start   | ts End     | Parquet Ref.             |")
-    print("+----------------------------------------+------------+------------+--------------------------+")
+    print("+----------------------------------------+------------+------------+--------------------------+--------+")
+    print("| Batch ID                               | ts Start   | ts End     | Parquet Ref.             | Damage |")
+    print("+----------------------------------------+------------+------------+--------------------------+--------+")
     
     for rds_trip in rds_trips:
-        print(f"| {rds_trip[0]:38} | {rds_trip[1]:10} | {rds_trip[2]:10} | {rds_trip[3]:24} |")
+        print(f"| {rds_trip[0]:38} | {rds_trip[1]:10} | {rds_trip[2]:10} | {rds_trip[3]:24} | {rds_trip[4]:6} |")
 
-    print("+----------------------------------------+------------+------------+--------------------------+\n")
+    print("+----------------------------------------+------------+------------+--------------------------+--------+\n")
 
 def save_chunk_to_rds(batch_id, ts_start, ts_end, geo_points, parquet_ref, chart_data_json, chunk_sum, chunk_count):
     conn = get_db_connection()
