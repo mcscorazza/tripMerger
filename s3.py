@@ -1,83 +1,85 @@
 import os
 import math
 import json
-from database import *
-from utils import *
-import awswrangler as wr
-import pandas as pd
 import time
+import pandas as pd
+import awswrangler as wr
+from database import save_chunk_to_rds
+from utils import to_base62
 
 BUCKET_NAME = os.environ.get('BUCKET_NAME')
 
-
-# ----------------------------------------------------------------------------
-#   GET S3 JSON FILES BY BATCH ID
-# ----------------------------------------------------------------------------
 def get_s3_objects(batch_id):
   raw_path = f"s3://{BUCKET_NAME}/raw/batch_id={batch_id}/"
-
   try:
     raw_files = wr.s3.list_objects(path=raw_path)
-
+    return raw_files if raw_files else []
   except Exception as e:
-    print(f"Warning: Could not list files for {batch_id}. Details: {e}")
+    print(f"Aviso: Não foi possível listar ficheiros para {batch_id}. Detalhes: {e}")
     return []
 
-  if not raw_files:
-    return []
-
-  return raw_files    
-
-# ----------------------------------------------------------------------------
-#   LIST PENDING TRIPS S3 JSON FILES QUANTITY
-# ----------------------------------------------------------------------------
 def print_s3_list(pending_trips):
-
-  print("\n# Reading S3 bucket:")
+  print("\n# A ler o bucket S3:")
   print("  +-------------------------------------------+-------------------+")
   print("  | BATCH ID                                  |        JSON FILES |")
   print("  |-------------------------------------------|-------------------|")
-
   for trip in pending_trips:
     raw_files = get_s3_objects(trip['batch_id'])
     print(f"  | {trip['batch_id']}      | {len(raw_files):6} json files |")
     print("  +-------------------------------------------+-------------------+")
 
+def inspect_file_edge(json_file):
+  """Lê o ficheiro uma única vez para extrair os metadados necessários das pontas."""
+  try:
+    df = wr.s3.read_json(path=json_file, orient='records', lines=True)
+    if df.empty:
+      return False, False, None
+    
+    is_finish = ('FINISH' in df['trip_status'].values) if 'trip_status' in df.columns else False
+    is_start = False
 
-def has_finish(json_file):
-  df = wr.s3.read_json(path=json_file, orient='records', lines=True)
-  finish = ('FINISH' in df['trip_status'].values) if 'trip_status' in df.columns else False
-  return finish
+    if 'batch_seq' in df.columns and 'trip_status' in df.columns:
+      is_start = (df['trip_status'].iloc[0] == "START")
+    
+    pos = None
 
-def has_start(json_file):
-  df = wr.s3.read_json(path=json_file, orient='records', lines=True)
-  first = (df['trip_status'].item() == "START") if 'batch_seq' in df.columns else False
-  return first
+    if 'position' in df.columns and len(df) > 0:
+      first_row_pos = df['position'].iloc[0]
+      if isinstance(first_row_pos, list) and len(first_row_pos) >= 2:
+        pos = [float(first_row_pos[0]), float(first_row_pos[1])]
+    return is_start, is_finish, pos
+  except Exception as e:
+    print(f"❌ Erro ao inspecionar o ficheiro {json_file}: {e}")
+    return False, False, None
 
-def chunk_type(json_files, chunk_size):
-  is_start = has_start(json_files[0])
-  is_finish = has_finish(json_files[-1])
+def chunk_type_optimized(json_files, chunk_size):
+  if not json_files:
+    return -1
+  is_start, _, _ = inspect_file_edge(json_files[0])
+  _, is_finish, _ = inspect_file_edge(json_files[-1])
 
   print("    Has START: ", is_start)
   print("    Has FINISH: ", is_finish)
  
-  if (len(json_files) < chunk_size) and (not is_start) and (not is_finish):
-    return 0
-  if (len(json_files) < chunk_size) and (is_start) and (not is_finish):
-    return 1    
-  if (len(json_files) < chunk_size) and (is_start) and (is_finish):
-    return 2
-  if (len(json_files) < chunk_size) and (not is_start) and (is_finish):
-    return 3
-  if len(json_files) >= chunk_size  and (not is_finish):
-    return 4
-  if len(json_files) >= chunk_size  and (is_finish):
-    return 5
+  total_files = len(json_files)
+  if total_files < chunk_size:
+    if not is_start and not is_finish: return 0
+    if is_start and not is_finish: return 1    
+    if is_start and is_finish: return 2
+    if not is_start and is_finish: return 3
+  else:
+    if not is_finish: return 4
+    if is_finish: return 5
   return -1
 
+def process_json_files(batch_id, files_to_process):
+  if not files_to_process:
+    return False
+  
+  df = wr.s3.read_json(path=files_to_process, orient='records', lines=True)
+  if df.empty:
+    return False
 
-def process_json_files(id, json_files):
-  df = wr.s3.read_json(path=json_files, orient='records', lines=True)
   if 'batch_seq' in df.columns:
     df = df.sort_values('batch_seq')
 
@@ -101,15 +103,15 @@ def process_json_files(id, json_files):
   chunk_count = 0
 
   if 'sensors' in df.columns:
-    for index, row in df.iterrows():
+    for _, row in df.iterrows():
       sensors = row.get('sensors')
       row_ts = row.get('ts')
-      
+            
       if isinstance(sensors, list):
         for sensor in sensors:
           if isinstance(sensor, dict) and sensor.get('id') == 'Truque_A':
             valores_brutos = sensor.get('value')
-            
+                        
             if isinstance(valores_brutos, list):
               valores_limpos = []
               for v in valores_brutos:
@@ -119,7 +121,7 @@ def process_json_files(id, json_files):
                     valores_limpos.append(num)
                 except (ValueError, TypeError):
                   pass
-              
+                            
               if valores_limpos:
                 max_val = max(valores_limpos)
                 min_val = min(valores_limpos)
@@ -131,66 +133,52 @@ def process_json_files(id, json_files):
                   'min': round(min_val, 2),
                   'avg': round(avg_val, 2)
                 })
-                
                 chunk_sum += avg_val
                 chunk_count += 1
-          
-            break
+          break
 
   if 'position' in df.columns:
-      df['lat'] = df['position'].apply(lambda x: float(x[0]) if isinstance(x, list) and len(x) >= 2 else None)
-      df['lng'] = df['position'].apply(lambda x: float(x[1]) if isinstance(x, list) and len(x) >= 2 else None)
-      geo_df = df[['ts', 'lat', 'lng']].copy().dropna(subset=['lat', 'lng'])
+    df['lat'] = df['position'].apply(lambda x: float(x[0]) if isinstance(x, list) and len(x) >= 2 else None)
+    df['lng'] = df['position'].apply(lambda x: float(x[1]) if isinstance(x, list) and len(x) >= 2 else None)
+    geo_df = df[['ts', 'lat', 'lng']].copy().dropna(subset=['lat', 'lng'])
   else:
-      geo_df = pd.DataFrame()
+    geo_df = pd.DataFrame()
 
   if not geo_df.empty:
     geo_df.rename(columns={'ts': 't'}, inplace=True)
     geo_points = geo_df.to_dict(orient='records') 
     if geo_points:
-      save_chunk_to_rds(id, ts_start, ts_finish, geo_points, parquet_filename, 
-              json.dumps(chart_data), chunk_sum, chunk_count)
-  
-  s3_parquet_key = f"s3://{BUCKET_NAME}/consolidated/batch_id={id}/{parquet_filename}.parquet"
+      save_chunk_to_rds(batch_id, ts_start, ts_finish, geo_points, parquet_filename, 
+                              json.dumps(chart_data), chunk_sum, chunk_count)
+    
+  s3_parquet_key = f"s3://{BUCKET_NAME}/consolidated/batch_id={batch_id}/{parquet_filename}.parquet"
   wr.s3.to_parquet(df=df, path=s3_parquet_key, index=False)
-  print(f"     ✅ Parquet generated with {len(df)} lines: {parquet_filename}")
+  print(f"     ✅ Parquet gerado com {len(df)} linhas: {parquet_filename}")
 
-  wr.s3.delete_objects(path=json_files)
-  print(f"     🗑️ Cleaning: {len(json_files)} JSONs removed from S3.")
-
+  wr.s3.delete_objects(path=files_to_process)
+  print(f"     🗑️ Limpeza: {len(files_to_process)} JSONs removidos do S3.")
   return True
 
-def large_process_data(id, json_files, chunk_size, is_finish = False):
+def large_process_data(batch_id, json_files, chunk_size, is_finish=False):
   loop_num = 1
   while len(json_files) > 0:
-    print("\n    ---- Loop #", loop_num)
-    print("     - ⚙ Total JSON files: ", len(json_files))
+    print(f"\n    ---- Loop #{loop_num}")
+    print("     - ⚙ Total JSON files em fila: ", len(json_files))
     
-    if len(json_files) >= chunk_size:
-      files_to_process = json_files[:chunk_size]
-    else:
-      files_to_process = json_files
+    files_to_process = json_files[:chunk_size]
+    print("     - ⚙ JSON files a processar neste loop: ", len(files_to_process))
     
-    print("     - ⚙ JSON files to process: ", len(files_to_process))
+    success = process_json_files(batch_id, files_to_process)
     
-    print(f"\n     🔄 Extracting batch from {len(files_to_process)} JSON files...")
-
-    process_chunk = process_json_files(id, files_to_process)
-    
-    if process_chunk:
-      print("     ✅ JSON files processed!")
+    if success:
       json_files = json_files[len(files_to_process):]
+    else:
+      print("     ❌ Falha crítica no processamento do lote. Interrompendo loop para evitar perda de dados.")
+      break
 
-    if len(json_files) < chunk_size and (not is_finish):
-      print("    ---- END!")
-      print("     ⏹ No FINISH found! Exit #JSON files: ", len(json_files))
+    if len(json_files) < chunk_size and not is_finish:
+      print("    ---- END CHUNK!")
+      print("     ⏹ Sem sinal de FINISH. Ficheiros restantes em cache: ", len(json_files))
       break
 
     loop_num += 1
-
-def get_pos(json):
-  df = wr.s3.read_json(path=json, orient='records', lines=True)
-  if 'position' in df.columns:
-    df['lat'] = df['position'].apply(lambda x: float(x[0]) if isinstance(x, list) and len(x) >= 2 else None)
-    df['lng'] = df['position'].apply(lambda x: float(x[1]) if isinstance(x, list) and len(x) >= 2 else None)
-    return [float(df['lat'].iloc[0]), float(df['lng'].iloc[0])]
