@@ -51,6 +51,8 @@ def update_trip_state(batch_id, start_pos=None, current_pos=None, is_finished=Fa
         update_expr_parts.extend(["start_pos = :pstart", "city_start = :cstart"])
         expr_vals[':pstart'] = to_decimal_list(start_pos)
         expr_vals[':cstart'] = city_start
+        update_expr_parts.append("calc_status = :calc_status")
+        expr_vals[':calc_status'] = 'PENDING'
 
     if current_pos:
         city_current = get_city_name(current_pos[0], current_pos[1], "CURRENT")
