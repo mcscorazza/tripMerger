@@ -17,7 +17,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-from CurvaSN import N_of_S, S_of_N
+from rainflow.CurvaSN import N_of_S, S_of_N
 
 
 def rainflow(series):
