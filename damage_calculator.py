@@ -1,5 +1,7 @@
 import os
 import awswrangler as wr
+import pandas as pd
+import numpy as np
 from database import get_db_connection, release_db_connection
 from dynamo import tracker_table
 from boto3.dynamodb.conditions import Key
@@ -46,8 +48,14 @@ def calculate_rainflow(batch_id, parquet_ref):
     s3_path = f"s3://{BUCKET_NAME}/consolidated/batch_id={batch_id}/{parquet_ref}.parquet"
     
     try:
-        array_sg15_bruto = wr.s3.read_parquet(path=s3_path)
-        damage_value = calc_fadiga.calcular_dano(array_sg15_bruto)
+        df_bruto_parquet = wr.s3.read_parquet(path=s3_path)
+        df_exp_sensors = df_bruto_parquet.explode('sensors')
+        df_norm_sensors = pd.json_normalize(df_exp_sensors['sensors'])
+        df_values = df_norm_sensors.explode('values')
+
+        array_sg15 = df_values['value'].to_numpy()
+
+        damage_value = calc_fadiga.calcular_dano(array_sg15)
         
         return damage_value
     except Exception as e:
