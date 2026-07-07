@@ -49,13 +49,17 @@ def calculate_rainflow(batch_id, parquet_ref):
     
     try:
         df_bruto_parquet = wr.s3.read_parquet(path=s3_path)
+        df_bruto_parquet.head()
         df_exp_sensors = df_bruto_parquet.explode('sensors')
+        df_exp_sensors.head()
         df_norm_sensors = pd.json_normalize(df_exp_sensors['sensors'])
+        df_norm_sensors.head()
         df_values = df_norm_sensors.explode('value')
+        df_values.head()
 
         array_sg15 = df_values['value'].to_numpy()
         
-        print(array_sg15)
+        array_sg15
 
         damage_value = calc_fadiga.calcular_dano(array_sg15)
         
@@ -111,7 +115,7 @@ def run_calculator():
                 
                 if damage_val is not None:
                     update_chunk_damage(chunk_id, damage_val)
-                    print(f"   ✔️ Dano salvo ({damage_val:.2f}) no RDS.")
+                    print(f"   ✔️ Dano salvo ({damage_val:.10f}) no RDS.")
 
         if trip_status == 'CONSOLIDATED':
             chunks_left = get_uncalculated_chunks(batch_id)
