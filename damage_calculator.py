@@ -109,10 +109,10 @@ def run_calculator():
         uncalculated_chunks = get_uncalculated_chunks(batch_id)
         
         if not uncalculated_chunks:
-            print("   👍 Todos os chunks já foram calculados para esta viagem.")
+            print("👍 Todos os chunks já foram calculados para esta viagem.")
         else:
             for chunk_id, parquet_ref in uncalculated_chunks:
-                print(f"   📊 Calculando Rainflow para o chunk: {parquet_ref}")
+                print(f"📊 Calculando Rainflow para o chunk: {parquet_ref}")
                 damage_val = calculate_rainflow(batch_id, parquet_ref)
                 
                 if damage_val is not None:

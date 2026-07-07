@@ -49,6 +49,9 @@ def sig2ext(sig, plot=False, titulo='Teste'):
 
     sig = np.asarray(sig).flatten()
 
+    if len(sig) < 2:
+        return sig
+
     sig_original = sig
     sig_original_x = np.arange(len(sig_original))
 

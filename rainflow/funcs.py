@@ -21,10 +21,8 @@ def filtrar_sinal_passabaixa(sinal, fc):
     fs = 200  # Cravando para testes na AWS
     numtaps = 500  # Número de coeficientes do filtro (tamanho do filtro)
     filtro = signal.firwin(numtaps, fc, fs=fs, pass_zero=True)
-
-    # Filtfilt para já corrigir a defasagem linear
     sinal_filtrado_filtfilt = signal.filtfilt(filtro, 1.0, sinal)
-
+    print("✅ End LPF")
     return sinal_filtrado_filtfilt
 
 def agrupar_dados_Rainflow(RainFlowDados):
