@@ -54,13 +54,13 @@ def calculate_rainflow(batch_id, parquet_ref):
         df_values = df_norm_sensors.explode('value')
         array_sg15 = df_values['value'].dropna().astype(float).to_numpy().flatten()
 
-        print("\n======================== DADOS DO ARRAY ==============================")
-        print(array_sg15)
-        print("Min:   ", array_sg15.min())
-        print("Max:   ", array_sg15.max())
-        print("Shape: ", array_sg15.shape)
-        print("Type:  ", array_sg15.dtype)
-        print("======================================================================\n")
+        # print("\n======================== DADOS DO ARRAY ==============================")
+        # print(array_sg15)
+        # print("Min:   ", array_sg15.min())
+        # print("Max:   ", array_sg15.max())
+        # print("Shape: ", array_sg15.shape)
+        # print("Type:  ", array_sg15.dtype)
+        # print("======================================================================\n")
 
         damage_value = calc_fadiga.calcular_dano(array_sg15)
         
@@ -117,7 +117,7 @@ def run_calculator():
                 
                 if damage_val is not None:
                     update_chunk_damage(chunk_id, damage_val)
-                    print(f"   ✔️ Dano salvo ({damage_val:.10f}) no RDS.")
+                    print(f"✔️ Dano salvo ({damage_val:.10f}) no RDS.\n\n\n")
 
         if trip_status == 'CONSOLIDATED':
             chunks_left = get_uncalculated_chunks(batch_id)
