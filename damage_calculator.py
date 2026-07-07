@@ -1,11 +1,14 @@
 import os
 import awswrangler as wr
 from database import get_db_connection, release_db_connection
-from dynamo import tracker_table  # Importando a tabela do seu dynamo.py
+from dynamo import tracker_table
 from boto3.dynamodb.conditions import Key
+from rainflow.main import CalculadoraDanoFadiga
 
 BUCKET_NAME = os.environ.get('BUCKET_NAME')
 CALC_GSI_NAME = os.environ.get('CALC_GSI_NAME')
+
+calc_fadiga = CalculadoraDanoFadiga(limite_fat=60.85)
 
 def get_pending_calculations():
     print("🔍 Buscando viagens pendentes de cálculo no DynamoDB...")
@@ -43,8 +46,8 @@ def calculate_rainflow(batch_id, parquet_ref):
     s3_path = f"s3://{BUCKET_NAME}/consolidated/batch_id={batch_id}/{parquet_ref}.parquet"
     
     try:
-        df = wr.s3.read_parquet(path=s3_path)
-        damage_value = 12.5
+        array_sg15_bruto = wr.s3.read_parquet(path=s3_path)
+        damage_value = calc_fadiga.calcular_dano(array_sg15_bruto)
         
         return damage_value
     except Exception as e:
