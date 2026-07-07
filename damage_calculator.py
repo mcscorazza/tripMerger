@@ -51,7 +51,7 @@ def calculate_rainflow(batch_id, parquet_ref):
         df_bruto_parquet = wr.s3.read_parquet(path=s3_path)
         df_exp_sensors = df_bruto_parquet.explode('sensors')
         df_norm_sensors = pd.json_normalize(df_exp_sensors['sensors'])
-        df_values = df_norm_sensors.explode('values')
+        df_values = df_norm_sensors.explode('value')
 
         array_sg15 = df_values['value'].to_numpy()
 
