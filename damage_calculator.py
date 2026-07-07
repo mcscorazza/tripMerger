@@ -54,15 +54,13 @@ def calculate_rainflow(batch_id, parquet_ref):
         df_values = df_norm_sensors.explode('value')
         array_sg15 = df_values['value'].dropna().astype(float).to_numpy().flatten()
 
-        print("\n####           FORMATO DO ARRAY           ####")
-
+        print("\n======================== DADOS DO ARRAY ==============================")
         print(array_sg15)
         print("Min:   ", array_sg15.min())
         print("Max:   ", array_sg15.max())
         print("Shape: ", array_sg15.shape)
         print("Type:  ", array_sg15.dtype)
-
-        print("##############################################\n")
+        print("======================================================================\n")
 
         damage_value = calc_fadiga.calcular_dano(array_sg15)
         
