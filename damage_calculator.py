@@ -54,6 +54,8 @@ def calculate_rainflow(batch_id, parquet_ref):
         df_values = df_norm_sensors.explode('value')
 
         array_sg15 = df_values['value'].to_numpy()
+        
+        print(array_sg15)
 
         damage_value = calc_fadiga.calcular_dano(array_sg15)
         
@@ -111,8 +113,6 @@ def run_calculator():
                     update_chunk_damage(chunk_id, damage_val)
                     print(f"   ✔️ Dano salvo ({damage_val:.2f}) no RDS.")
 
-        # Regra de Ouro: Só marcamos como CALCULATED se a ingestão já finalizou (CONSOLIDATED)
-        # e não há mais chunks sem cálculo no banco.
         if trip_status == 'CONSOLIDATED':
             chunks_left = get_uncalculated_chunks(batch_id)
             if not chunks_left:
