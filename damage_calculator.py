@@ -54,13 +54,20 @@ def calculate_rainflow(batch_id, parquet_ref):
         df_values = df_norm_sensors.explode('value')
         array_sg15 = df_values['value'].dropna().astype(float).to_numpy().flatten()
 
-        print("#### FORMATO DO ARRAY ####")
+        print("\n####           FORMATO DO ARRAY           ####")
+
         print(array_sg15)
-        print("##########################")
-        
+        print("Min:   ", array_sg15.min())
+        print("Max:   ", array_sg15.max())
+        print("Shape: ", array_sg15.shape())
+        print("Type:  ", array_sg15.dtype())
+
+        print("##############################################\n")
+
         damage_value = calc_fadiga.calcular_dano(array_sg15)
         
         return damage_value
+    
     except Exception as e:
         print(f"❌ Erro ao ler Parquet ou calcular fadiga ({parquet_ref}): {e}")
         return None
