@@ -17,7 +17,6 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import win32com.client
 from CurvaSN import N_of_S, S_of_N
 
 
