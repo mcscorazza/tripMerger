@@ -59,8 +59,8 @@ def calculate_rainflow(batch_id, parquet_ref):
         print(array_sg15)
         print("Min:   ", array_sg15.min())
         print("Max:   ", array_sg15.max())
-        print("Shape: ", array_sg15.shape())
-        print("Type:  ", array_sg15.dtype())
+        print("Shape: ", array_sg15.shape)
+        print("Type:  ", array_sg15.dtype)
 
         print("##############################################\n")
 
