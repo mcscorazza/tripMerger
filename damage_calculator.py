@@ -64,7 +64,7 @@ def calculate_rainflow(batch_id, parquet_ref):
 
         damage_value = calc_fadiga.calcular_dano(array_sg15)
         
-        return damage_value
+        return float(damage_value)
     
     except Exception as e:
         print(f"❌ Erro ao ler Parquet ou calcular fadiga ({parquet_ref}): {e}")
