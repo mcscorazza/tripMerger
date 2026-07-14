@@ -109,7 +109,7 @@ def process_json_files(batch_id, files_to_process):
             
       if isinstance(sensors, list):
         for sensor in sensors:
-          if isinstance(sensor, dict) and sensor.get('id') == 'SG15':
+          if isinstance(sensor, dict) and sensor.get('id') == 'Sg15':
             valores_brutos = sensor.get('value')
                         
             if isinstance(valores_brutos, list):
