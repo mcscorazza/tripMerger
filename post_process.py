@@ -59,7 +59,7 @@ def trip_critical_analisis(batch_id):
             compress_peak = max([abs(point.get('min', 0)) for point in chart_data]) if chart_data else 0
             abs_peak = max(max_peak, compress_peak)
 
-            if abs_peak > critical_limit and abs_peak < MIN_DEFORMATION:
+            if abs_peak > critical_limit and abs_peak > MIN_DEFORMATION:
                 critical_ids.append((chunk_id,))
             else:
                 non_critical_ids.append((chunk_id,))
