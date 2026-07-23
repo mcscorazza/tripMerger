@@ -4,6 +4,8 @@ from psycopg2.extras import execute_values
 def trip_critical_analisis(batch_id):
     print(f"🔍 Starting Post-Trip Criticality Analysis (Full Recalculation): {batch_id}")
     
+    MIN_DEFORMATION = 200
+    
     try:
         conn = get_db_connection()
         if not conn: return
@@ -57,7 +59,7 @@ def trip_critical_analisis(batch_id):
             compress_peak = max([abs(point.get('min', 0)) for point in chart_data]) if chart_data else 0
             abs_peak = max(max_peak, compress_peak)
 
-            if abs_peak > critical_limit:
+            if abs_peak > critical_limit and abs_peak < MIN_DEFORMATION:
                 critical_ids.append((chunk_id,))
             else:
                 non_critical_ids.append((chunk_id,))
