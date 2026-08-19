@@ -15,11 +15,11 @@ def get_s3_objects(batch_id):
     raw_files = wr.s3.list_objects(path=raw_path)
     return raw_files if raw_files else []
   except Exception as e:
-    print(f"Aviso: Não foi possível listar ficheiros para {batch_id}. Detalhes: {e}")
+    print(f"Aviso: Não foi possível listar os arquivos para {batch_id}. Detalhes: {e}")
     return []
 
 def print_s3_list(pending_trips):
-  print("\n# A ler o bucket S3:")
+  print("\n# Lendo o bucket S3:")
   print("  +-------------------------------------------+-------------------+")
   print("  | BATCH ID                                  |        JSON FILES |")
   print("  |-------------------------------------------|-------------------|")
@@ -29,7 +29,7 @@ def print_s3_list(pending_trips):
     print("  +-------------------------------------------+-------------------+")
 
 def inspect_file_edge(json_file):
-  """Lê o ficheiro uma única vez para extrair os metadados necessários das pontas."""
+  """Lê o arquivo uma única vez para extrair os metadados necessários das pontas."""
   try:
     df = wr.s3.read_json(path=json_file, orient='records', lines=True)
     if df.empty:
@@ -43,13 +43,15 @@ def inspect_file_edge(json_file):
     
     pos = None
 
-    if 'position' in df.columns and len(df) > 0:
+    if 'position' in df.columns and 'battery' in df.columns and len(df) > 0:
       first_row_pos = df['position'].iloc[0]
+      first_row_ts = df['battery'].iloc[1]
       if isinstance(first_row_pos, list) and len(first_row_pos) >= 2:
-        pos = [float(first_row_pos[0]), float(first_row_pos[1])]
+        pos = [int(first_row_ts), float(first_row_pos[0]), float(first_row_pos[1])]
     return is_start, is_finish, pos
+  
   except Exception as e:
-    print(f"❌ Erro ao inspecionar o ficheiro {json_file}: {e}")
+    print(f"❌ Erro ao inspecionar o arquivo {json_file}: {e}")
     return False, False, None
 
 def chunk_type_optimized(json_files, chunk_size):
