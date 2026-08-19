@@ -45,7 +45,8 @@ def inspect_file_edge(json_file):
 
     if 'position' in df.columns and 'battery' in df.columns and len(df) > 0:
       first_row_pos = df['position'].iloc[0]
-      first_row_ts = df['battery'].iloc[1]
+      first_row_battery = df['battery'].iloc[0]
+      first_row_ts = first_row_battery.get('timestamp') if isinstance(first_row_battery, dict) else 0
       if isinstance(first_row_pos, list) and len(first_row_pos) >= 2:
         pos = [int(first_row_ts), float(first_row_pos[0]), float(first_row_pos[1])]
     return is_start, is_finish, pos
