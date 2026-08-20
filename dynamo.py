@@ -39,7 +39,13 @@ def search_pending_trips():
     return []
 
 def to_decimal_list(pos):
-    return [Decimal(str(pos[0])), Decimal(str(pos[1]))] if pos else None
+    if pos:
+        return [
+            Decimal(str(pos[0])), # ts
+            Decimal(str(pos[1])), # lat
+            Decimal(str(pos[2]))  # lng
+        ]
+    return None
   
 def update_trip_state(batch_id, start_pos=None, current_pos=None, is_finished=False):
     update_expr_parts = []
